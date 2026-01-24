@@ -84,7 +84,7 @@ export class GitService extends Effect.Service<GitService>()("GitService", {
       // because Nix rejects paths containing symlinks
       const worktreePath = nodePath.join(
         fs.realpathSync(os.tmpdir()),
-        `dix-base-${sanitizeBranchName(baseRef)}-${runId}`,
+        `lix-base-${sanitizeBranchName(baseRef)}-${runId}`,
       );
 
       return Effect.acquireRelease(

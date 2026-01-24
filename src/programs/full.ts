@@ -7,7 +7,7 @@ import {
   GitWorktreeError,
   NixPathInfoError,
   NixBuildError,
-  NixDixError,
+  NixLixError,
   NotPullRequestContextError,
   GitHubApiError,
   AttributeParseError,
@@ -25,7 +25,7 @@ import {
 } from "./shared.js";
 
 // Error type aliases for better readability
-type DiffError = NixPathInfoError | NixBuildError | NixDixError;
+type DiffError = NixPathInfoError | NixBuildError | NixLixError;
 type ProcessDiffError = GitWorktreeError | DiffError;
 export type RunFullError =
   | NotPullRequestContextError
@@ -75,7 +75,7 @@ const processNixOutput = (
     yield* Effect.logInfo(`Base path: ${basePath}`);
     yield* Effect.logInfo(`PR path: ${prPath}`);
 
-    const diff = yield* nix.getDixDiff(basePath, prPath, worktreePath);
+    const diff = yield* nix.getLixDiff(basePath, prPath, worktreePath);
 
     return {
       displayName: config.displayName,

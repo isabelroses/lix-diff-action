@@ -19,7 +19,7 @@ import {
   GitWorktreeError,
   NixPathInfoError,
   NixBuildError,
-  NixDixError,
+  NixLixError,
   GitHubApiError,
   ArtifactError,
 } from "./errors.js";
@@ -74,8 +74,8 @@ export const run = (): Promise<void> =>
         setFailed(`Nix path-info failed for ${e.flakeRef}: ${e.message}`),
       NixBuildError: (e: NixBuildError) =>
         setFailed(`Nix build failed for ${e.flakeRef}: ${e.message}`),
-      NixDixError: (e: NixDixError) =>
-        setFailed(`Nix dix failed comparing ${e.basePath} vs ${e.prPath}: ${e.message}`),
+      NixLixError: (e: NixLixError) =>
+        setFailed(`Nix lix failed comparing ${e.basePath} vs ${e.prPath}: ${e.message}`),
       GitHubApiError: (e: GitHubApiError) =>
         setFailed(`GitHub ${e.operation} failed: ${e.message}`),
       ArtifactError: (e: ArtifactError) => setFailed(`Artifact ${e.name} failed: ${e.message}`),

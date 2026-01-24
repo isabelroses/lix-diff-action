@@ -5,7 +5,7 @@ import { parseCommentStrategy, parseAttributes, validateDirectory } from "./prog
 import { processDiffResults } from "./programs/full.js";
 import { GitService, sanitizeBranchName } from "./services/git.js";
 import { NixService } from "./services/nix.js";
-import { hasDixChanges } from "./services/utils.js";
+import { hasLixChanges } from "./services/utils.js";
 import { createArtifactName } from "./services/artifact.js";
 import { generateDiffHtml, isUnchanged, parseDiff, slugify, stripPrefix } from "./services/html.js";
 
@@ -137,16 +137,15 @@ describe("formatAggregatedComment", () => {
 
     // Single attribute uses displayName-specific marker
     expect(comment).toContain("<!-- nix-diff-action:host1 -->");
-    expect(comment).toContain("## Nix Diff");
-    expect(comment).toContain("### host1");
+    expect(comment).toContain("## Lix Diff");
+    expect(comment).toContain("<summary>host1</summary>");
     expect(comment).toContain(
       "**Attribute**: `nixosConfigurations.host1.config.system.build.toplevel`",
     );
-    expect(comment).toContain("`github:owner/repo...."); // baseRef...prRef
     expect(comment).toContain("some diff output");
     expect(comment).toContain("<!-- nix-diff-action-footer sha=abc123def456 -->");
     expect(comment).toContain("[nix-diff-action](https://github.com/natsukium/nix-diff-action)");
-    expect(comment).toContain("[dix](https://github.com/faukah/dix)");
+    expect(comment).toContain("[lix-diff](https://github.com/tgirlcloud/lix-diff)");
   });
 
   test("formats multiple results with generic marker", () => {
@@ -171,8 +170,8 @@ describe("formatAggregatedComment", () => {
     // Multiple attributes use generic marker
     expect(comment).toContain("<!-- nix-diff-action -->");
     expect(comment).not.toContain("<!-- nix-diff-action:host1 -->");
-    expect(comment).toContain("### host1");
-    expect(comment).toContain("### host2");
+    expect(comment).toContain("<summary>host1</summary>");
+    expect(comment).toContain("<summary>host2</summary>");
     expect(comment).toContain("diff1");
     expect(comment).toContain("diff2");
   });
@@ -475,7 +474,7 @@ describe("processDiffResults", () => {
           capturedFlakeRefs.push(flakeRef);
           return Effect.succeed(`/nix/store/mock-hash`);
         },
-        getDixDiff: (_basePath: string, _prPath: string, inputsFromPath: string) => {
+        getLixDiff: (_basePath: string, _prPath: string, inputsFromPath: string) => {
           capturedInputsFromPaths?.push(inputsFromPath);
           return Effect.succeed("mock diff output");
         },
@@ -483,7 +482,7 @@ describe("processDiffResults", () => {
     );
 
   test("constructs correct paths when directory equals cwd", async () => {
-    const worktreePath = "/tmp/dix-base-main";
+    const worktreePath = "/tmp/lix-base-main";
     const directory = "/workspace/repo";
     const cwd = "/workspace/repo";
     const capturedFlakeRefs: string[] = [];
@@ -515,16 +514,16 @@ describe("processDiffResults", () => {
     expect(result[0].diff).toBe("mock diff output");
 
     // Verify getNixPath was called with correct flake refs
-    expect(capturedFlakeRefs).toContain("path:/tmp/dix-base-main#packages.x86_64-linux.default");
+    expect(capturedFlakeRefs).toContain("path:/tmp/lix-base-main#packages.x86_64-linux.default");
     expect(capturedFlakeRefs).toContain("/workspace/repo#packages.x86_64-linux.default");
 
-    // Security: Verify getDixDiff uses base branch worktree path (not PR branch)
-    // This prevents malicious flake.lock in PR from injecting compromised dix
+    // Security: Verify getLixDiff uses base branch worktree path (not PR branch)
+    // This prevents malicious flake.lock in PR from injecting compromised lix
     expect(capturedInputsFromPaths).toEqual([worktreePath]);
   });
 
   test("constructs correct paths for subdirectory", async () => {
-    const worktreePath = "/tmp/dix-base-main";
+    const worktreePath = "/tmp/lix-base-main";
     const directory = "/workspace/repo/packages/myflake";
     const cwd = "/workspace/repo";
     const capturedFlakeRefs: string[] = [];
@@ -555,7 +554,7 @@ describe("processDiffResults", () => {
 
     // Verify getNixPath was called with correct flake refs
     expect(capturedFlakeRefs).toContain(
-      "path:/tmp/dix-base-main?dir=packages/myflake#packages.x86_64-linux.default",
+      "path:/tmp/lix-base-main?dir=packages/myflake#packages.x86_64-linux.default",
     );
     expect(capturedFlakeRefs).toContain(
       "/workspace/repo/packages/myflake#packages.x86_64-linux.default",
@@ -563,7 +562,7 @@ describe("processDiffResults", () => {
   });
 
   test("processes multiple attributes", async () => {
-    const worktreePath = "/tmp/dix-base-main";
+    const worktreePath = "/tmp/lix-base-main";
     const directory = "/workspace/repo";
     const cwd = "/workspace/repo";
     const capturedFlakeRefs: string[] = [];
@@ -681,17 +680,17 @@ describe("createArtifactName", () => {
   });
 });
 
-describe("hasDixChanges", () => {
+describe("hasLixChanges", () => {
   test("returns false for undefined", () => {
-    expect(hasDixChanges(undefined)).toBe(false);
+    expect(hasLixChanges(undefined)).toBe(false);
   });
 
   test("returns false for empty string", () => {
-    expect(hasDixChanges("")).toBe(false);
+    expect(hasLixChanges("")).toBe(false);
   });
 
   test("returns false for whitespace only", () => {
-    expect(hasDixChanges("   \n  ")).toBe(false);
+    expect(hasLixChanges("   \n  ")).toBe(false);
   });
 
   test("returns false when paths are identical", () => {
@@ -700,7 +699,7 @@ describe("hasDixChanges", () => {
 
 SIZE: 14.6 MiB -> 14.6 MiB
 DIFF: 0 bytes`;
-    expect(hasDixChanges(diff)).toBe(false);
+    expect(hasLixChanges(diff)).toBe(false);
   });
 
   test("returns true when paths differ", () => {
@@ -709,21 +708,21 @@ DIFF: 0 bytes`;
 
 SIZE: 10.0 MiB -> 12.0 MiB
 DIFF: 500 KiB`;
-    expect(hasDixChanges(diff)).toBe(true);
+    expect(hasLixChanges(diff)).toBe(true);
   });
 
   test("returns true when cannot parse base path", () => {
     const diff = `>>> /nix/store/def456-new.drv
 
 SIZE: 10.0 MiB`;
-    expect(hasDixChanges(diff)).toBe(true);
+    expect(hasLixChanges(diff)).toBe(true);
   });
 
   test("returns true when cannot parse pr path", () => {
     const diff = `<<< /nix/store/abc123-old.drv
 
 SIZE: 10.0 MiB`;
-    expect(hasDixChanges(diff)).toBe(true);
+    expect(hasLixChanges(diff)).toBe(true);
   });
 
   test("handles paths with spaces correctly", () => {
@@ -732,7 +731,7 @@ SIZE: 10.0 MiB`;
 
 SIZE: 5.0 MiB -> 5.0 MiB
 DIFF: 0 bytes`;
-    expect(hasDixChanges(diff)).toBe(false);
+    expect(hasLixChanges(diff)).toBe(false);
   });
 });
 

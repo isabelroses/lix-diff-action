@@ -1,8 +1,6 @@
 import * as exec from "@actions/exec";
 import { Data, Effect, Ref } from "effect";
-import { NixPathInfoError, NixDixError, NixBuildError } from "../errors.js";
-
-class DixUnsupportedFlag extends Data.TaggedError("DixUnsupportedFlag")<{}> {}
+import { NixPathInfoError, NixLixError, NixBuildError } from "../errors.js";
 
 interface ExecResult {
   exitCode: number;
@@ -47,11 +45,11 @@ const execNix = (args: string[], ignoreReturnCode = true): Effect.Effect<ExecRes
 const execPrefetch = (flakeRef: string) =>
   Effect.tryPromise({
     try: () =>
-      exec.exec("nix", ["flake", "prefetch-inputs", flakeRef], {
+      exec.exec("nix", ["flake", "archive", flakeRef], {
         ignoreReturnCode: true,
         listeners: { stderr: () => {} },
       }),
-    catch: () => new Error("prefetch failed"),
+    catch: () => new Error("archive failed"),
   }).pipe(Effect.orElseSucceed(() => 1));
 
 export class NixService extends Effect.Service<NixService>()("NixService", {
@@ -67,7 +65,7 @@ export class NixService extends Effect.Service<NixService>()("NixService", {
             if (!alreadyLogged) {
               yield* Ref.set(prefetchLogged, true);
               yield* Effect.logInfo(
-                "Skipping parallel input fetch: nix flake prefetch-inputs requires Nix 2.31.0+",
+                "Skipping parallel input fetch: nix flake archive",
               );
             }
           }
@@ -118,48 +116,35 @@ export class NixService extends Effect.Service<NixService>()("NixService", {
 
       // Security: inputsFromPath must reference the base branch worktree, not the PR branch.
       // Using the PR branch's flake.lock would allow attackers to inject a malicious nixpkgs
-      // fork that replaces dix with arbitrary code, which would then execute in the CI environment
+      // fork that replaces lix with arbitrary code, which would then execute in the CI environment
       // with access to GITHUB_TOKEN and other secrets.
-      getDixDiff: (
+      getLixDiff: (
         basePath: string,
         prPath: string,
         inputsFromPath: string,
       ): Effect.Effect<string, NixDixError> => {
         // Use path: to avoid git history requirements
         const inputsFromRef = `path:${inputsFromPath}`;
-        const baseArgs = ["run", "nixpkgs#dix", "--inputs-from", inputsFromRef, "--"];
+        const baseArgs = ["run", "nixpkgs#lix-diff", "--inputs-from", inputsFromRef, "--"];
 
-        const handleDixResult = (result: ExecResult) => {
+        const handleLixResult = (result: ExecResult) => {
           if (result.exitCode !== 0) {
             return Effect.fail(
-              new NixDixError({
+              new NixLixError({
                 basePath,
                 prPath,
-                message: result.stderr || "dix failed with no error message",
+                message: result.stderr || "lix failed with no error message",
               }),
             );
           }
           if (result.stderr) {
-            return Effect.logInfo(`dix stderr: ${result.stderr}`).pipe(Effect.as(result.stdout));
+            return Effect.logInfo(`lix stderr: ${result.stderr}`).pipe(Effect.as(result.stdout));
           }
           return Effect.succeed(result.stdout);
         };
 
-        // Try with --force-correctness (dix 1.4.2+) first, fall back to
-        // without it for older versions that don't recognize the flag.
-        return execNix([...baseArgs, "--force-correctness", basePath, prPath]).pipe(
-          Effect.flatMap((result) =>
-            result.exitCode !== 0 &&
-            result.stderr.includes("unexpected argument '--force-correctness'")
-              ? Effect.fail(new DixUnsupportedFlag())
-              : Effect.succeed(result),
-          ),
-          Effect.catchTag("DixUnsupportedFlag", () =>
-            Effect.logInfo("dix does not support --force-correctness, retrying without it").pipe(
-              Effect.andThen(execNix([...baseArgs, basePath, prPath])),
-            ),
-          ),
-          Effect.flatMap(handleDixResult),
+        return execNix([...baseArgs, basePath, prPath]).pipe(
+          Effect.flatMap(handleLixResult),
         );
       },
     };

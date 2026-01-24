@@ -39,7 +39,7 @@ export class NixBuildError extends Schema.TaggedError<NixBuildError>()("NixBuild
   message: Schema.String,
 }) {}
 
-export class NixDixError extends Schema.TaggedError<NixDixError>()("NixDixError", {
+export class NixLixError extends Schema.TaggedError<NixLixError>()("NixLixError", {
   basePath: Schema.String,
   prPath: Schema.String,
   message: Schema.String,

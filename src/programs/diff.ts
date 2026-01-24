@@ -8,7 +8,7 @@ import {
   GitWorktreeError,
   NixPathInfoError,
   NixBuildError,
-  NixDixError,
+  NixLixError,
   ArtifactError,
   InvalidDirectoryError,
 } from "../errors.js";
@@ -23,7 +23,7 @@ export type RunDiffError =
   | GitWorktreeError
   | NixPathInfoError
   | NixBuildError
-  | NixDixError
+  | NixLixError
   | ArtifactError
   | ConfigError;
 

@@ -12,7 +12,7 @@ import {
   GitWorktreeError,
   NixPathInfoError,
   NixBuildError,
-  NixDixError,
+  NixLixError,
   GitHubApiError,
   InvalidCommentStrategyError,
 } from "../errors.js";
@@ -107,7 +107,7 @@ export type RunDiffPipelineError =
   | GitWorktreeError
   | NixPathInfoError
   | NixBuildError
-  | NixDixError;
+  | NixLixError;
 
 /**
  * Execute diff pipeline and return results

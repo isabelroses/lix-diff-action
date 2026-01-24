@@ -1,6 +1,6 @@
 {
   "name": "nix-diff-action",
-  "description": "Compare Nix derivations between base and PR branches using dix",
+  "description": "Compare Nix derivations between base and PR branches using lix-diff",
   "version": "0.1.0",
   "author": "natsukium",
   "type": "module",

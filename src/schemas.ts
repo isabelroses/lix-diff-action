@@ -54,7 +54,7 @@ export const DiffResult = Schema.Struct({
     description: "Commit SHA of the PR head",
   }),
   diff: Schema.NonEmptyString.annotations({
-    description: "Diff output from dix tool",
+    description: "Diff output from lix tool",
   }),
 }).annotations({ identifier: "DiffResult" });
 export type DiffResult = typeof DiffResult.Type;

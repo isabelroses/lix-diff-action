@@ -168,7 +168,7 @@ export class ArtifactService extends Effect.Service<ArtifactService>()("Artifact
 
       return Effect.scoped(
         Effect.gen(function* () {
-          const tempDir = yield* withTempDir("dix-", artifactName);
+          const tempDir = yield* withTempDir("lix-", artifactName);
           const resultPath = nodePath.join(tempDir, "result.json");
 
           yield* Effect.tryPromise({
@@ -241,7 +241,7 @@ export class ArtifactService extends Effect.Service<ArtifactService>()("Artifact
       owner: string,
       repo: string,
     ): Effect.Effect<readonly DiffResult[], ArtifactError> => {
-      const downloadPath = nodePath.join(os.tmpdir(), "dix-results");
+      const downloadPath = nodePath.join(os.tmpdir(), "lix-results");
       const findBy: FindBy = {
         token,
         workflowRunId: runId,
